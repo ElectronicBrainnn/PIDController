@@ -3,7 +3,9 @@ from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import QElapsedTimer,QThread, QObject, pyqtSignal as Signal, pyqtSlot as Slot
 
 class UARTQThread(QThread):
-    getByteDone = Signal(list)
+    getByteData = Signal(list)
+    getByteControl = Signal(list)
+    getBytePIDPar = Signal(list)
 
     def __init__(self) -> None:
         super().__init__()
@@ -29,6 +31,14 @@ class UARTQThread(QThread):
     def recive(self):
         RXdata = self.ser.readline()
         self.RXdataBuff = RXdata.split()
+    
+    def processData(self):
+        if int(float(str(self.RXdataBuff[0], "UTF-8"))) == 0:
+            self.getByteData.emit(self.RXdataBuff)
+        elif int(float(str(self.RXdataBuff[0], "UTF-8"))) == 1:
+            self.getByteControl.emit(self.RXdataBuff)
+        else:
+            self.getBytePIDPar.emit(self.RXdataBuff)
 
     @Slot()
     def run(self):
@@ -36,6 +46,6 @@ class UARTQThread(QThread):
             bytetoRead = self.ser.inWaiting()
             if bytetoRead > 0:
                 self.recive()
-                self.getByteDone.emit(self.RXdataBuff)
+                self.processData()
 
 
