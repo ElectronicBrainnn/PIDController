@@ -125,7 +125,9 @@ class GUI(Ui_MainWindow):
         self.Velocity_but.clicked.connect(self.clickedVelocityCallback)
         self.Position_but.clicked.connect(self.clickedPositionCallback)
 
-        self.uart.getByteDone.connect(self.processDataCallback)
+        self.uart.getByteData.connect(self.getByteDataCallback)
+        self.uart.getByteControl.connect(self.getByteControlCallback)
+        self.uart.getBytePIDPar.connect(self.getBytePIDParCallback)
 
     def clickedConnectCallback(self):
         NameCOM = self.COM.currentText()
@@ -268,45 +270,43 @@ class GUI(Ui_MainWindow):
             else:
                 self.Position_graph.setYRange(0, 2400, padding=0)
 
-    def processDataCallback(self, RXDataBuff:list):
-        if len(RXDataBuff)!=0:
-            if int(float(str(RXDataBuff[0], "UTF-8"))) == 0:
-                self.varBuff.append(float(str(RXDataBuff[1], "UTF-8")))
-                self.re_se_data.append("value = "
-                                        + str(RXDataBuff[1], "UTF-8")
-                                        + "        "
-                                        + "u_control = "
-                                        + str(RXDataBuff[2], "UTF-8")
-                                    )
-                self.plotGrap()
-
-            elif int(float(str(RXDataBuff[0], "UTF-8"))) == 1:
-                if int(float(str(RXDataBuff[1], "UTF-8"))) == 0:
-                    self.note.append("Motor is running" + "\n")
-                elif int(float(str(RXDataBuff[1], "UTF-8"))) == 1:
-                    self.note.append("Motor has been stopped" + "\n")
-                else:
-                    self.re_se_data.clear()
-                    self.note.clear()
-                    self.note.append("System has been resetted" + "\n")
-
-            else:
-                self.note.append("Please check again your PID parameters!")
-                self.note.append("PID parameter you send is:"
-                                + "\n"
-                                + "  Kp = "
+    def getByteDataCallback(self, RXDataBuff:list):
+        self.varBuff.append(float(str(RXDataBuff[1], "UTF-8")))
+        self.re_se_data.append("value = "
                                 + str(RXDataBuff[1], "UTF-8")
-                                + "\n"
-                                + "  Ki = "
+                                + "        "
+                                + "u_control = "
                                 + str(RXDataBuff[2], "UTF-8")
-                                + "\n"
-                                + "  Kd = "
-                                + str(RXDataBuff[3], "UTF-8")
-                                + "\n"
-                                + "  Setpoint = "
-                                + str(RXDataBuff[4], "UTF-8")
-                                + "\n"
                             )
+        self.plotGrap()
+    
+    def getByteControlCallback(self, RXDataBuff:list):
+        if int(float(str(RXDataBuff[1], "UTF-8"))) == 0:
+            self.note.append("Motor is running" + "\n")
+        elif int(float(str(RXDataBuff[1], "UTF-8"))) == 1:
+            self.note.append("Motor has been stopped" + "\n")
+        else:
+            self.re_se_data.clear()
+            self.note.clear()
+            self.note.append("System has been resetted" + "\n")
+
+    def getBytePIDParCallback(self, RXDataBuff:list):
+        self.note.append("Please check again your PID parameters!")
+        self.note.append("PID parameter you send is:"
+                        + "\n"
+                        + "  Kp = "
+                        + str(RXDataBuff[1], "UTF-8")
+                        + "\n"
+                        + "  Ki = "
+                        + str(RXDataBuff[2], "UTF-8")
+                        + "\n"
+                        + "  Kd = "
+                        + str(RXDataBuff[3], "UTF-8")
+                        + "\n"
+                        + "  Setpoint = "
+                        + str(RXDataBuff[4], "UTF-8")
+                        + "\n"
+                    )
 
 def UIbuild():
     app = QtWidgets.QApplication(sys.argv)
